@@ -1,49 +1,60 @@
-using Unity.Mathematics;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    [SerializeField] private float speed;
-    [SerializeField] private float destroyRange;
-    [SerializeField] private float seekRange;
+    [SerializeField] private float speed = 2f;
+    [SerializeField] private float destroyRange = 1f;
+    [SerializeField] private float seekRange = 5f;
 
     [SerializeField] private GameObject Target;
 
+    private Vector3 initialPosition;
+
     private void Start()
     {
-       
+        //la posición inicial del enemigo
+        initialPosition = transform.position;
     }
 
     private void Update()
     {
-       
+        Vector3 dirToTarget = (Target.transform.position - transform.position).normalized;
+        float rawAngle = Vector3.Dot(transform.right, dirToTarget);
+        float radians = Mathf.Acos(rawAngle);
+        float angle = radians * Mathf.Rad2Deg;
 
-         Vector3 dir = (Target.transform.position - transform.position).normalized;
+        float distanceToTarget = Vector3.Distance(Target.transform.position, transform.position);
 
-         float rawAngle = Vector3.Dot(transform.right, dir);
-         float radians = Mathf.Acos(rawAngle);
-         float angle = radians * Mathf.Rad2Deg;
-         print("Angle: " + angle);
-
-        if(rawAngle < 0)
+        // Si el personaje está cerca y dentro del ángulo de visión
+        if (distanceToTarget < seekRange && angle <= 60)
         {
-            GetComponent<SpriteRenderer>().flipX = !GetComponent<SpriteRenderer>().flipX;
+            MoveTowards(Target.transform.position);
+        }
+        else
+        {
+            // Regresar a la posición inicial
+            if (Vector3.Distance(transform.position, initialPosition) > 0.1f)
+            {
+                MoveTowards(initialPosition);
+            }
         }
 
-        if(Vector3.Distance(Target.transform.position, transform.position) < seekRange && angle <= 60)
+        if (distanceToTarget < destroyRange)
         {
-            DrawVectors.Instance.Draw(transform.position, transform.position + transform.right, Color.green);
-            DrawVectors.Instance.Draw(transform.position, transform.position + dir, Color.cyan);
-
-            DrawVectors.Instance.DrawDir(transform.position, transform.position + transform.right, Color.red);
-
-            transform.position += dir * speed * Time.deltaTime;
-        }
-
-
-        if (Vector3.Distance(Target.transform.position, transform.position) < destroyRange)
             Destroy(gameObject);
+        }
     }
+
+    void MoveTowards(Vector3 destination)
+    {
+        Vector3 direction = (destination - transform.position).normalized;
+
+        transform.position += direction * speed * Time.deltaTime;
+
+        // Girar sprite hacia la izquierda si se mueve hacia la izquierda
+        GetComponent<SpriteRenderer>().flipX = direction.x < 0;
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.white;
