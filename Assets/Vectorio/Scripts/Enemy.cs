@@ -51,8 +51,14 @@ public class Enemy : MonoBehaviour
 
         transform.position += direction * speed * Time.deltaTime;
 
-        // Girar sprite hacia la izquierda si se mueve hacia la izquierda
-        GetComponent<SpriteRenderer>().flipX = direction.x < 0;
+        if (direction.x < 0)
+        {
+            transform.rotation = Quaternion.Euler(0, 180, 0); // Mira a la izquierda
+        }
+        else
+        {
+            transform.rotation = Quaternion.Euler(0, 0, 0);   // Mira a la derecha
+        }
     }
 
     private void OnDrawGizmos()
